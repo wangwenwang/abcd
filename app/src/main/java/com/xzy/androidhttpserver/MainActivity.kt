@@ -170,4 +170,14 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener  {
             }
         }
     }
+
+    class BootCompleteReceiver : BroadcastReceiver() {
+        override fun onReceive(context: Context, arg1: Intent) {
+
+            //启动app代码
+            val autoStart = Intent(context, MainActivity::class.java)
+            autoStart.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(autoStart)
+        }
+    }
 }

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AndroidHttpServer</string>
+    <string name="app_name">TTSPlayer</string>
     <string name="test_step">
         单 Android 设备作为服务器使用\n\n
         单独执行 AndroidHttpServer 程序，也就是将 Android 设备作为 HttpServer 使用（意味着只有一台 Android 设备）\n
