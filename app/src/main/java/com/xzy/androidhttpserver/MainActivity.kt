@@ -75,6 +75,11 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener  {
 //                tv_result.text = job.await()
 //            }
 //        }
+
+        val home = Intent(Intent.ACTION_MAIN)
+        home.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        home.addCategory(Intent.CATEGORY_HOME)
+        startActivity(home)
     }
 
     private fun testDevicesAPIGet(): String {
