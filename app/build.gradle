@@ -6,7 +6,7 @@ android {
     compileSdkVersion 29
 
     defaultConfig {
-        applicationId "com.xzy.androidhttpserver"
+        applicationId "com.minicreate.ttsplayer"
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
@@ -14,7 +14,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-
+        // 签名别名、密码
         // tts
         // tts123
     }
@@ -41,4 +41,5 @@ dependencies {
     implementation 'com.koushikdutta.async:androidasync:2.2.1'
     // 依赖协程
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.7'
+    implementation 'com.github.princekin-f:EasyFloat:1.3.3'
 }
