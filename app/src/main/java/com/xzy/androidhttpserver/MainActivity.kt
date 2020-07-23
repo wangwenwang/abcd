@@ -7,8 +7,6 @@ import android.content.IntentFilter
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.android.synthetic.main.activity_main.*
@@ -21,6 +19,16 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLDecoder
 import java.util.*
+import com.lzf.easyfloat.EasyFloat
+import com.lzf.easyfloat.anim.AppFloatDefaultAnimator
+import com.lzf.easyfloat.anim.DefaultAnimator
+import com.lzf.easyfloat.enums.ShowPattern
+import com.lzf.easyfloat.enums.SidePattern
+import com.lzf.easyfloat.interfaces.OnDisplayHeight
+import com.lzf.easyfloat.interfaces.OnInvokeView
+import com.lzf.easyfloat.utils.DisplayUtils
+import android.view.Gravity
+import android.widget.*
 
 
 @Suppress("unused")
@@ -109,6 +117,15 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener  {
             }
         }.start()
 
+
+        EasyFloat.with(this)
+            .setShowPattern(ShowPattern.ALL_TIME)
+            .setSidePattern(SidePattern.RESULT_SIDE)
+            .setGravity(Gravity.CENTER)
+            .setLocation(20, 200)
+            .setLayout(R.layout.float_top, OnInvokeView {
+            })
+            .show()
     }
 
     private fun testDevicesAPIGet(): String {
