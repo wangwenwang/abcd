@@ -121,8 +121,7 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener  {
         EasyFloat.with(this)
             .setShowPattern(ShowPattern.ALL_TIME)
             .setSidePattern(SidePattern.RESULT_SIDE)
-            .setGravity(Gravity.CENTER)
-            .setLocation(20, 200)
+            .setGravity(Gravity.RIGHT)
             .setLayout(R.layout.float_top, OnInvokeView {
             })
             .show()
