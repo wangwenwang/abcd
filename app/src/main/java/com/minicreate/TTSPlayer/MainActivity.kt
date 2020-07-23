@@ -20,25 +20,19 @@ import java.net.URL
 import java.net.URLDecoder
 import java.util.*
 import com.lzf.easyfloat.EasyFloat
-import com.lzf.easyfloat.anim.AppFloatDefaultAnimator
-import com.lzf.easyfloat.anim.DefaultAnimator
 import com.lzf.easyfloat.enums.ShowPattern
 import com.lzf.easyfloat.enums.SidePattern
-import com.lzf.easyfloat.interfaces.OnDisplayHeight
 import com.lzf.easyfloat.interfaces.OnInvokeView
-import com.lzf.easyfloat.utils.DisplayUtils
 import android.view.Gravity
 import android.widget.*
 
 
 @Suppress("unused")
-open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener  {
-    public val tag = "MainActivity"
+open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
-    public var textToSpeech // TTS对象
-            : TextToSpeech? = null
-
-    public var receiver :BroadcastReceiver? = null
+    val tag = "MainActivity"
+    var textToSpeech: TextToSpeech? = null // TTS对象
+    var receiver: BroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,20 +47,12 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener  {
             override fun onReceive(context: Context?, intent: Intent?) {
 
                 var msg = intent?.getStringExtra("msg")
-
-//                if (textToSpeech != null && !textToSpeech!!.isSpeaking()) {
-                    // 设置音调，值越大声音越尖（女生），值越小则变成男声,1.0是常规
-//                    textToSpeech!!.setPitch(0.5f);
-                    //设定语速 ，默认1.0正常语速
-//                    textToSpeech!!.setSpeechRate(1.5f);
-                    //朗读，注意这里三个参数的added in API level 4   四个参数的added in API level 21
-                    textToSpeech!!.speak(msg, TextToSpeech.QUEUE_ADD, null)
-//                }
+                textToSpeech!!.speak(msg, TextToSpeech.QUEUE_ADD, null)
             }
         }
-        LocalBroadcastManager.getInstance(this).registerReceiver(receiver!!, IntentFilter("actionName"))
+        LocalBroadcastManager.getInstance(this)
+            .registerReceiver(receiver!!, IntentFilter("actionName"))
 
-//        btn_clear.setOnClickListener { tv_result.text = "" }
         btn_test_local_get.setOnClickListener {
             runBlocking {
                 val job = GlobalScope.async {
@@ -75,48 +61,15 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener  {
                 tv_result.text = job.await()
             }
         }
-//        btn_test_local_post.setOnClickListener {
-//            runBlocking {
-//                val job = GlobalScope.async {
-//                    testDevicesAPIPost(true)
-//                }
-//                tv_result.text = job.await()
-//            }
-//        }
-
 
         object : Thread() {
             override fun run() {
-
                 sleep(1000)
                 runOnUiThread {
-
                     moveTaskToBack(true);
-
-//                    val home = Intent(Intent.ACTION_MAIN)
-//                    home.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-//                    home.addCategory(Intent.CATEGORY_HOME)
-//                    startActivity(home)
-
-//                    val intent = Intent(Intent.ACTION_MAIN)
-//                    //前提：知道要跳转应用的包名、类名
-//                    val componentName = ComponentName("com.teamhd.gnamp", "");
-//                    intent.setComponent(componentName);
-//                    startActivity(intent);
-
-//                    com.teamhd.gnamp
-//                    com.example.myapplication
-
-//                    val intent = Intent()
-//                    intent.setClassName(
-//                        "com.teamhd.gnamp",
-//                        "com.teamhd.gnamp.MainActivity"
-//                    )
-//                    startActivity(intent)
                 }
             }
         }.start()
-
 
         EasyFloat.with(this)
             .setShowPattern(ShowPattern.ALL_TIME)
@@ -130,7 +83,6 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener  {
     private fun testDevicesAPIGet(): String {
 
         var tv_prompt = findViewById(R.id.textView) as TextView
-
         var requestResult: String
         try {
             val requestUrl = "http://localhost:7302/playTTS?text=" + tv_prompt.text
@@ -205,17 +157,15 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener  {
 
     override fun onInit(status: Int) {
 
-        Log.d("LM", "onInit: ")
-
-//        // 判断是否转化成功
-        if (status == TextToSpeech.SUCCESS){
+        // 判断是否转化成功
+        if (status == TextToSpeech.SUCCESS) {
             //默认设定语言为中文，原生的android貌似不支持中文。
             var result = textToSpeech!!.setLanguage(Locale.CHINESE);
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED){
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Toast.makeText(this, "不支持中文", Toast.LENGTH_SHORT).show();
                 //不支持中文就将语言设置为英文
                 textToSpeech!!.setLanguage(Locale.ENGLISH);
-            }else{
+            } else {
                 Toast.makeText(this, "支持中文", Toast.LENGTH_SHORT).show();
             }
         }
