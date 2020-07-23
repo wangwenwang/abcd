@@ -6,7 +6,7 @@ android {
     compileSdkVersion 29
 
     defaultConfig {
-        applicationId "com.xzy.androidhttpserver"
+        applicationId "com.minicreate.ttsplayer"
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
@@ -14,7 +14,7 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-
+        // 别名，密码
         // tts
         // tts123
     }

@@ -1,4 +1,4 @@
-package com.xzy.androidhttpserver
+package com.minicreate.TTSPlayer
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.xzy.androidhttpserver", appContext.packageName)
+        assertEquals("com.minicreate.TTSPlayer", appContext.packageName)
     }
 }
