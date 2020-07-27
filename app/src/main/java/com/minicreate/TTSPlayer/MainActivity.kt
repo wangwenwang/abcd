@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.AudioManager
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
@@ -45,6 +46,10 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
+
+                val au = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                val mMaxVolume = au.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                au.setStreamVolume(AudioManager.STREAM_MUSIC, mMaxVolume, AudioManager.FLAG_PLAY_SOUND)
 
                 var msg = intent?.getStringExtra("msg")
                 textToSpeech!!.speak(msg, TextToSpeech.QUEUE_ADD, null)
