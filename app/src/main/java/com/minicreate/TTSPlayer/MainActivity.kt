@@ -5,9 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.media.AudioManager
+import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.util.Log
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.android.synthetic.main.activity_main.*
@@ -25,7 +29,6 @@ import com.lzf.easyfloat.enums.ShowPattern
 import com.lzf.easyfloat.enums.SidePattern
 import com.lzf.easyfloat.interfaces.OnInvokeView
 import android.view.Gravity
-import android.widget.*
 
 
 @Suppress("unused")
@@ -33,7 +36,8 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     val tag = "MainActivity"
     var textToSpeech: TextToSpeech? = null // TTS对象
-    var receiver: BroadcastReceiver? = null
+    var receiver: BroadcastReceiver? = null// 广播对象
+    var mCurrVolume = 0 // 播放TTS「铃声」通道前，记录「媒体」音量
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,14 +51,52 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         receiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
 
-                val au = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                val mMaxVolume = au.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-                au.setStreamVolume(AudioManager.STREAM_MUSIC, mMaxVolume, AudioManager.FLAG_PLAY_SOUND)
-
                 var msg = intent?.getStringExtra("msg")
-                textToSpeech!!.speak(msg, TextToSpeech.QUEUE_ADD, null)
+                var volume = 1f
+                try { volume = intent?.getStringExtra("volume")!!.toFloat() }
+                catch (e: Exception){ }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    val params = Bundle()
+                    params.putInt(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_NOTIFICATION)
+                    params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, volume)
+                    textToSpeech!!.speak(msg, TextToSpeech.QUEUE_ADD, params, msg)
+                } else {
+                    val params = HashMap<String, String>()
+                    params.put(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_NOTIFICATION.toString())
+                    params.put(TextToSpeech.Engine.KEY_PARAM_VOLUME, volume.toString())
+                    @Suppress("DEPRECATION") //针对旧版本的调用
+                    textToSpeech!!.speak(msg, TextToSpeech.QUEUE_ADD, params)
+                }
             }
         }
+        // TTS生命周期监听
+        textToSpeech!!.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+
+            // 开始播放
+            override fun onStart(s: String) {
+
+                val au = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                var tVolume = au.getStreamVolume(AudioManager.STREAM_MUSIC)
+                if(tVolume != 0){
+                    mCurrVolume = tVolume
+                }
+                au.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0)
+            }
+
+            // 播放完成
+            override fun onDone(s: String) {
+
+                val au = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                au.setStreamVolume(AudioManager.STREAM_MUSIC, mCurrVolume, 0)
+            }
+
+            // 播放错误
+            override fun onError(s: String) {
+
+                val au = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+                au.setStreamVolume(AudioManager.STREAM_MUSIC, mCurrVolume, 0)
+            }
+        })
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(receiver!!, IntentFilter("actionName"))
 

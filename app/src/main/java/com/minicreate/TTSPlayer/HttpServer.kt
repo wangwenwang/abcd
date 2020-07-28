@@ -73,13 +73,19 @@ class HttpServer : HttpServerRequestCallback  {
         response: AsyncHttpServerResponse
     ) {
         // Print request params
-        val text: String
+        var text = "请输入播放内容"
+        var volume = "1.0"
         when (params) {
             is Multimap -> {
-                text = params.getString("text")
+
+                try { text = params.getString("text") }
+                catch (e: Exception){ }
+                try { volume = params.getString("volume") }
+                catch (e: Exception){ }
 
                 var intent = Intent("actionName")
                 intent.putExtra("msg", text)
+                intent.putExtra("volume", volume)
                 LocalBroadcastManager.getInstance(WdTools.getContext()).sendBroadcast(intent)
 
                 Log.d(TAG, "[Multimap] text=$text")
