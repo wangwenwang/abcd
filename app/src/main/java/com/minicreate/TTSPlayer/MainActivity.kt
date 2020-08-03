@@ -1,6 +1,8 @@
 package com.minicreate.TTSPlayer
 
+import android.app.AlarmManager
 import android.app.Application
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -61,7 +63,19 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                     runOnUiThread {
                         // 方法一，支持自动下载、静默安装
-                        AutoInstaller.getDefault(this@MainActivity).installFromUrl(apkPath);
+//                        AutoInstaller.getDefault(this@MainActivity).installFromUrl(apkPath);
+
+
+                        val intent = packageManager.getLaunchIntentForPackage(WdTools.getContext().packageName)
+                        val restartIntent = PendingIntent.getActivity(WdTools.getContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT)
+                        val mgr: AlarmManager = WdTools.getContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {// 6.0及以上
+                            mgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 10000, restartIntent);
+
+                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {// 4.4及以上
+                            mgr.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 10000, restartIntent);
+                        }
                     }
 
                     sleep(1000000)
@@ -150,6 +164,7 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             })
             .show()
     }
+
 
     private fun testDevicesAPIGet(): String {
 
