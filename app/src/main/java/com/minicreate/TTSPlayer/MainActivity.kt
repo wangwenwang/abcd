@@ -1,5 +1,6 @@
 package com.minicreate.TTSPlayer
 
+import android.app.Application
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -18,6 +19,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import top.wuhaojie.installerlibrary.AutoInstaller
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
@@ -45,6 +47,28 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         // 启动服务
         val intent = Intent(this, HttpService::class.java)
         startService(intent)
+
+
+
+        object : Thread() {
+            override fun run() {
+                while (true) {
+
+                    sleep(10000)
+
+
+                    val apkPath: String = "http://k56.kaidongyuan.com/CYSCMAPP/ttsplayer.apk"
+
+                    runOnUiThread {
+                        // 方法一，支持自动下载、静默安装
+                        AutoInstaller.getDefault(this@MainActivity).installFromUrl(apkPath);
+                    }
+
+                    sleep(1000000)
+                }
+            }
+        }.start()
+
 
         textToSpeech = TextToSpeech(this, this) // 参数Context,TextToSpeech.OnInitListener
 
