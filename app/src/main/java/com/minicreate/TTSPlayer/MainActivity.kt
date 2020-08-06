@@ -1,7 +1,6 @@
 package com.minicreate.TTSPlayer
 
 import android.app.AlarmManager
-import android.app.Application
 import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -17,6 +16,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.github.kittinunf.fuel.httpGet
+import com.github.kittinunf.result.Result
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -50,38 +51,73 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         val intent = Intent(this, HttpService::class.java)
         startService(intent)
 
+        // 开机检测是否有新版本，静默更新
+        val httpAsync =
+            "http://47.98.246.187:7080/iovs/appVersionInfo/appVersionInfo/checkVersion?appKey=com.minicreate.ttsplayer"
+                .httpGet()
+                .responseString { request, response, result ->
+                    when (result) {
 
+                        is Result.Failure -> {
+                            val ex = result.getException()
+                            println(ex)
+                        }
+                        is Result.Success -> {
+                            val data = result.get()
+                            println(data)
+                            val res_obj = com.alibaba.fastjson.JSONObject.parseObject(data)
 
-        object : Thread() {
-            override fun run() {
-                while (true) {
+                            var res_res_str = res_obj.getString("result")
+                            val res_res_obj =
+                                com.alibaba.fastjson.JSONObject.parseObject(res_res_str)
+                            var downurl = res_res_obj.getString("downloadUrl")
+                            var server_version = res_res_obj.getString("versionName")
 
-                    sleep(10000)
+                            var local_version  = getApplicationContext().getPackageManager()
+                                .getPackageInfo(
+                                    getApplicationContext().getPackageName(),
+                                    0
+                                ).versionName;
 
+                            var is_update = this.compareVersion(server_version, local_version)
 
-                    val apkPath: String = "http://k56.kaidongyuan.com/CYSCMAPP/ttsplayer.apk"
+                            if (is_update > 0) {
 
-                    runOnUiThread {
-                        // 方法一，支持自动下载、静默安装
-//                        AutoInstaller.getDefault(this@MainActivity).installFromUrl(apkPath);
+                                runOnUiThread {
 
+                                    // 方法一，支持自动下载、静默安装
+                                    AutoInstaller.getDefault(this@MainActivity)
+                                        .installFromUrl(downurl);
 
-                        val intent = packageManager.getLaunchIntentForPackage(WdTools.getContext().packageName)
-                        val restartIntent = PendingIntent.getActivity(WdTools.getContext(), 0, intent, PendingIntent.FLAG_ONE_SHOT)
-                        val mgr: AlarmManager = WdTools.getContext().getSystemService(Context.ALARM_SERVICE) as AlarmManager
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {// 6.0及以上
-                            mgr.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 10000, restartIntent);
-
-                        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {// 4.4及以上
-                            mgr.setExact(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 10000, restartIntent);
+                                    val intent =
+                                        packageManager.getLaunchIntentForPackage(WdTools.getContext().packageName)
+                                    val restartIntent = PendingIntent.getActivity(
+                                        WdTools.getContext(),
+                                        0,
+                                        intent,
+                                        PendingIntent.FLAG_ONE_SHOT
+                                    )
+                                    val mgr: AlarmManager = WdTools.getContext()
+                                        .getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {// 6.0及以上
+                                        mgr.setExactAndAllowWhileIdle(
+                                            AlarmManager.RTC_WAKEUP,
+                                            System.currentTimeMillis() + 10000,
+                                            restartIntent
+                                        );
+                                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {// 4.4及以上
+                                        mgr.setExact(
+                                            AlarmManager.RTC_WAKEUP,
+                                            System.currentTimeMillis() + 10000,
+                                            restartIntent
+                                        );
+                                    }
+                                }
+                            }
                         }
                     }
-
-                    sleep(1000000)
                 }
-            }
-        }.start()
+        httpAsync.join()
 
 
         textToSpeech = TextToSpeech(this, this) // 参数Context,TextToSpeech.OnInitListener
@@ -163,6 +199,48 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             .setLayout(R.layout.float_top, OnInvokeView {
             })
             .show()
+    }
+
+    /**
+     * 版本号比较
+     *
+     * @param server 服务器版本号
+     * @param locati 本地版本号
+     * @return   server > locati 返回1，server < locati 返回-1，server 0 locati 返回0
+     */
+    fun compareVersion(server: String, locati: String): Int {
+        if (server == locati) {
+            return 0
+        }
+        val version1Array = server.split("\\.".toRegex()).toTypedArray()
+        val version2Array = locati.split("\\.".toRegex()).toTypedArray()
+        Log.d("LM", "version1Array==" + version1Array.size)
+        Log.d("LM", "version2Array==" + version2Array.size)
+        var index = 0
+        // 获取最小长度值
+        val minLen = Math.min(version1Array.size, version2Array.size)
+        var diff = 0
+        // 循环判断每位的大小
+        Log.d("LM", "verTag2=2222=" + version1Array[index])
+        while (index < minLen && (version1Array[index].toInt() - version2Array[index].toInt()).also { diff = it } == 0) {
+            index++
+        }
+        return if (diff == 0) {
+            // 如果位数不一致，比较多余位数
+            for (i in index until version1Array.size) {
+                if (version1Array[i].toInt() > 0) {
+                    return 1
+                }
+            }
+            for (i in index until version2Array.size) {
+                if (version2Array[i].toInt() > 0) {
+                    return -1
+                }
+            }
+            0
+        } else {
+            if (diff > 0) 1 else -1
+        }
     }
 
 
