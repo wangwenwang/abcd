@@ -1,7 +1,5 @@
 package com.minicreate.TTSPlayer
 
-import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -23,6 +21,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import top.wuhaojie.installerlibrary.AutoInstaller
+import top.wuhaojie.installerlibrary.AutoInstaller.OnStateChangedListener
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
@@ -70,7 +69,9 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                             var res_res_str = res_obj.getString("result")
                             val res_res_obj =
                                 com.alibaba.fastjson.JSONObject.parseObject(res_res_str)
-                            var downurl = res_res_obj.getString("downloadUrl")
+                            var downurl_list = res_res_obj.getString("downloadUrl")
+                            val arr: List<String> = downurl_list.split(",")
+                            var last_downurlurl = arr.last()
                             var server_version = res_res_obj.getString("versionName")
 
                             var local_version  = getApplicationContext().getPackageManager()
@@ -87,31 +88,44 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
                                     // 方法一，支持自动下载、静默安装
                                     AutoInstaller.getDefault(this@MainActivity)
-                                        .installFromUrl(downurl);
+                                        .installFromUrl(last_downurlurl);
+                                    val installer = AutoInstaller.getDefault(this@MainActivity)
+                                    installer.setOnStateChangedListener(object :
+                                        OnStateChangedListener {
+                                        override fun onStart() {
+                                            // callback when it starts installing
 
-                                    val intent =
-                                        packageManager.getLaunchIntentForPackage(WdTools.getContext().packageName)
-                                    val restartIntent = PendingIntent.getActivity(
-                                        WdTools.getContext(),
-                                        0,
-                                        intent,
-                                        PendingIntent.FLAG_ONE_SHOT
-                                    )
-                                    val mgr: AlarmManager = WdTools.getContext()
-                                        .getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {// 6.0及以上
-                                        mgr.setExactAndAllowWhileIdle(
-                                            AlarmManager.RTC_WAKEUP,
-                                            System.currentTimeMillis() + 10000,
-                                            restartIntent
-                                        );
-                                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {// 4.4及以上
-                                        mgr.setExact(
-                                            AlarmManager.RTC_WAKEUP,
-                                            System.currentTimeMillis() + 10000,
-                                            restartIntent
-                                        );
-                                    }
+                                            Log.d("LM", "程序自动升级中...")
+
+                                            Toast.makeText(
+                                                this@MainActivity,
+                                                "程序自动升级中...",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+
+                                        override fun onComplete() {
+                                            // callback when is complete request installing
+
+                                            Log.d("LM", "程序自动升级完成")
+
+                                            Toast.makeText(
+                                                this@MainActivity,
+                                                "程序自动升级完成！",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+
+                                        override fun onNeed2OpenService() {
+                                            // callback when `AccessibilityService` is needs and start the  `AccessibilityService` Activity
+                                            // here you can notify user to open the service
+                                            Toast.makeText(
+                                                this@MainActivity,
+                                                "请在「设置」-->「无障碍」开启自动安装权限",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    })
                                 }
                             }
                         }
@@ -214,14 +228,11 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
         val version1Array = server.split("\\.".toRegex()).toTypedArray()
         val version2Array = locati.split("\\.".toRegex()).toTypedArray()
-        Log.d("LM", "version1Array==" + version1Array.size)
-        Log.d("LM", "version2Array==" + version2Array.size)
         var index = 0
         // 获取最小长度值
         val minLen = Math.min(version1Array.size, version2Array.size)
         var diff = 0
         // 循环判断每位的大小
-        Log.d("LM", "verTag2=2222=" + version1Array[index])
         while (index < minLen && (version1Array[index].toInt() - version2Array[index].toInt()).also { diff = it } == 0) {
             index++
         }
@@ -342,6 +353,20 @@ open class MainActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             val autoStart = Intent(context, MainActivity::class.java)
             autoStart.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(autoStart)
+        }
+    }
+
+    class UpdateRestartReceiver : BroadcastReceiver() {
+        override fun onReceive(
+            context: Context,
+            intent: Intent
+        ) {
+            if (intent.action == "android.intent.action.PACKAGE_REPLACED") {
+                Toast.makeText(context,"已升级到新版本",Toast.LENGTH_SHORT).show();
+                val intent2 = Intent(context, MainActivity::class.java)
+                intent2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent2)
+            }
         }
     }
 }
