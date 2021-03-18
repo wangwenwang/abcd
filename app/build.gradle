@@ -17,6 +17,7 @@ android {
         // 别名，密码
         // tts
         // tts123
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -52,4 +53,6 @@ dependencies {
     implementation 'com.github.a-voyager:AutoInstaller:v1.0'
     implementation 'com.github.kittinunf.fuel:fuel:2.2.0'
     implementation 'com.alibaba:fastjson:1.2.73'
+    implementation 'com.safframework.server:android-server-core:1.3.1'
+    implementation 'com.safframework.server:android-server-converter-gson:1.3.1'
 }
